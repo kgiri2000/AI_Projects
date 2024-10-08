@@ -1,4 +1,4 @@
-#This is done on datalab workbook so, I won't be able to run and I won't be able to have all the papers.
+#This is done on Datalab workbook so, I won't be able to run and I won't be able to have all the papers.
 #Run openAI package
 !pip install openai == 1.33.0
 import os
@@ -41,7 +41,7 @@ papers = pd.DataFrame({
 papers["filename"] = "papers/" + papers["filename"]
 papers
 
-#Define the fuction to upload a file to a assistance
+#Define the function to upload a file to an assistant
 
 def upload_file_for_assistance(file_path):
     uploaded_file = client.files.create(
@@ -60,8 +60,8 @@ uploaded_file_ids = papers["filename"]\
     .apply(upload_file_for_assistance)\
     .to_list()
 
-#Create the vectors store, associating the uploaded file IDs and naming it.
-#To access tje documents and get sensible results, they need to be split up inot small chunks and added to a vector database
+#Create the vectors store, associating and naming the uploaded file IDs.
+#To access these documents and get sensible results, they need to be split up into small chunks and added to a vector database
 
 vstore = client.beta.vector_stores.create(
     file_ids = uploaded_file_ids,
@@ -70,19 +70,39 @@ vstore = client.beta.vector_stores.create(
 )
 
 #Create the assistance
-#The assistance needs a prompts describing how it should behave. This consists of few paragraphs of text that give GPT information
-#about what role it should be talking about, and how to pharse the responses
+#The assistance needs prompts describing how it should behave. This consists of a few paragraphs of text that give GPT information
+#about what role it should be talking about, and how to phrase the responses
+# Run this
+assistant_prompt = """
+You are Aggie, a knowledgeable and articulate AI assistant specializing in artificial general intelligence (AGI). Your primary role is to read and explain the contents of academic journal articles, particularly those available on arXiv in PDF form. Your target audience comprises data scientists who are familiar with AI concepts but may not be experts in AGI.
+
+When explaining the contents of the papers, follow these guidelines:
+
+Introduction: Start with a brief overview of the paper's title, authors, and the main objective or research question addressed.
+
+Abstract Summary: Provide a concise summary of the abstract, highlighting the key points and findings.
+
+Key Sections and Findings: Break down the paper into its main sections (e.g., Introduction, Methods, Results, Discussion). For each section, provide a summary that includes:
+
+The main points and arguments presented.
+Any important methods or techniques used.
+Key results and findings.
+The significance and implications of these findings.
+Conclusion: Summarize the conclusions drawn by the authors, including any limitations they mention and future research directions suggested.
+
+Critical Analysis: Offer a critical analysis of the paper, discussing its strengths and weaknesses. Highlight any innovative approaches or significant contributions to the field of AGI.
+
+Contextual Understanding: Place the paper in the context of the broader field of AGI research. Mention how it relates to other work in the area and its potential impact on future research and applications.
+
+Practical Takeaways: Provide practical takeaways or insights that data scientists can apply in their work. This could include novel methodologies, interesting datasets, or potential areas for collaboration or further study.
+
+Q&A Readiness: Be prepared to answer any follow-up questions that data scientists might have about the paper, providing clear and concise explanations.
+
+Ensure that your explanations are clear, concise, and accessible, avoiding unnecessary jargon. Your goal is to make complex AGI research comprehensible and relevant to data scientists, facilitating their understanding and engagement with the latest advancements in the field.
+"""
 
 
-
-
-
-
-
-
-
-
-#Define the asistant and assign to aggie
+#Define the assistant and assign it to aggie
 aggie = client.beta.assistants.create(
     name = "Aggie",
     instructions = assistant_promot,
@@ -104,7 +124,35 @@ msg_what_is_Agi = client.beta.threads.message.create(
     content = "Whar is the most common definition of AGI?"
 )
 
-#To run the assistant we need event handler to make it print in the datalab workbook
+#To run the assistant we need an event handler to make it print in the Datalab workbook
+
+from typing_extensions import override
+from openai import AssistantEventHandler
+ 
+# First, we create a EventHandler class to define
+# how we want to handle the events in the response stream.
+ 
+class EventHandler(AssistantEventHandler):    
+  @override
+  def on_text_created(self, text) -> None:
+    print(f"\nassistant > ", end="", flush=True)
+      
+  @override
+  def on_text_delta(self, delta, snapshot):
+    print(delta.value, end="", flush=True)
+      
+  def on_tool_call_created(self, tool_call):
+    print(f"\nassistant > {tool_call.type}\n", flush=True)
+  
+  def on_tool_call_delta(self, delta, snapshot):
+    if delta.type == 'code_interpreter':
+      if delta.code_interpreter.input:
+        print(delta.code_interpreter.input, end="", flush=True)
+      if delta.code_interpreter.outputs:
+        print(f"\n\noutput >", flush=True)
+        for output in delta.code_interpreter.outputs:
+          if output.type == "logs":
+            print(f"\n{output.logs}", flush=True)
 
 
 
