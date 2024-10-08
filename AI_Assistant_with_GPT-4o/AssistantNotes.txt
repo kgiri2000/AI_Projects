@@ -1,0 +1,26 @@
+//Primarily working with OpenAI APIs.
+//Some python code
+Need to have OpenAI developer account.
+
+
+About this case study:
+
+Data: 10 papers from arxiv about AGI(Artificial General Intelligent)
+Primary Goal: Create an OpenAI  file search assistant based on GPT-4o
+Secondary Goal: Understand how AI assistants can be useful
+Why? Sometimes,it is better to have tools that is more narrowly focused.
+
+Type/ Feature of AI assistant:
+i.File Search (Use document provided to answer questions)
+ii. Code interpreter ( Writes and runs Python code)
+iii.Function Calling: Provides a natural language interface to other software Basically changing 
+    natural language to other to function  calling for other software.
+
+Open AI Developer Platform
+
+Code in Datalab Workbook
+-Add some credit to use OpenAI APIs
+-Add the API in environment of the Datalab Workbook
+
+!pip install openai == 1.33.0
+
